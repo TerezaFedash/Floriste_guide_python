@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Квіти до подій - Підбір букетів{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold mb-1">
+            <span>🎁</span> Підбір квітів для особливих подій
+        </h2>
+        <p class="text-muted mb-0">
+            Оберіть свято або привід, щоб переглянути ідеальні флористичні сорти та композиції
+        </p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for occ in occasions %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 border rounded-4 shadow-sm p-4 bg-body d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-{{ occ.badge_color }}-subtle text-{{ occ.badge_color }} rounded-pill px-3 py-1">
+                            {{ occ.get_season_display }}
+                        </span>
+                        <span class="badge bg-light text-muted border rounded-pill">
+                            {{ occ.flower_count|default:0 }} квітів
+                        </span>
+                    </div>
+
+                    <h4 class="fw-bold mb-2">{{ occ.name }}</h4>
+                    <p class="text-muted small mb-3" style="line-height: 1.6;">
+                        {{ occ.description }}
+                    </p>
+                </div>
+
+                <div class="pt-3 border-top">
+                    <a href="{% url 'catalog:occasion_detail' slug=occ.slug %}" class="btn btn-pink-outline w-100">
+                        Підібрати квіти до свята <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12 text-center py-5 text-muted">
+            <p>Приводи наразі оновлюються.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load florist_tags %}
+
+{% block title %}Каталог квітів - Довідник Флориста{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-md-7">
+        <h2 class="fw-bold mb-1">
+            <span>🌸</span> Каталог квітів
+        </h2>
+        <p class="text-muted mb-0">
+            Знайдено квітів за критеріями: <span class="badge bg-pink text-white rounded-pill px-3">{{ total_found }}</span>
+        </p>
+    </div>
+    <div class="col-md-5 text-md-end mt-3 mt-md-0">
+        {% if user.is_authenticated %}
+            <a href="{% url 'catalog:flower_create' %}" class="btn btn-pink shadow-sm">
+                <i class="bi bi-plus-circle"></i> Додати нову квітку
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Блок пошуку та фільтрації (В5.2: forms.Form, Д4: Q-об'єкти) -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 bg-body-tertiary">
+    <div class="card-body p-4">
+        <form method="get" action="{% url 'catalog:flower_list' %}" class="row g-3 align-items-end">
+            <!-- Текстовий пошук -->
+            <div class="col-lg-3 col-md-6">
+                <label for="{{ filter_form.q.id_for_label }}" class="form-label small fw-semibold text-muted">Пошук за назвою або описом</label>
+                {{ filter_form.q }}
+            </div>
+
+            <!-- Категорія -->
+            <div class="col-lg-2 col-md-6">
+                <label for="{{ filter_form.category.id_for_label }}" class="form-label small fw-semibold text-muted">Категорія</label>
+                {{ filter_form.category }}
+            </div>
+
+            <!-- Привід -->
+            <div class="col-lg-2 col-md-6">
+                <label for="{{ filter_form.occasion.id_for_label }}" class="form-label small fw-semibold text-muted">Привід / Подія</label>
+                {{ filter_form.occasion }}
+            </div>
+
+            <!-- Максимальна ціна -->
+            <div class="col-lg-2 col-md-6">
+                <label for="{{ filter_form.max_price.id_for_label }}" class="form-label small fw-semibold text-muted">Макс. ціна (грн)</label>
+                {{ filter_form.max_price }}
+            </div>
+
+            <!-- Лише в наявності та кнопки -->
+            <div class="col-lg-3 col-md-12 d-flex align-items-center justify-content-between gap-2">
+                <div class="form-check mt-3">
+                    {{ filter_form.in_stock_only }}
+                    <label class="form-check-label small" for="{{ filter_form.in_stock_only.id_for_label }}">
+                        В наявності
+                    </label>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-pink px-3" title="Застосувати фільтри">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <a href="{% url 'catalog:flower_list' %}" class="btn btn-outline-secondary px-3" title="Скинути фільтри">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Сітка карток квітів (В4.1, В4.3) -->
+<div class="row g-4 mb-4">
+    {% for flower in flowers %}
+        <div class="col-lg-4 col-md-6">
+            {% render_flower_card flower %}
+        </div>
+    {% empty %}
+        <div class="col-12 py-5 text-center">
+            <div class="fs-1 mb-2">🥀</div>
+            <h4 class="fw-bold">Квітів не знайдено</h4>
+            <p class="text-muted">Спробуйте змінити параметри пошуку або скинути фільтри.</p>
+            <a href="{% url 'catalog:flower_list' %}" class="btn btn-pink-outline mt-2">
+                Скинути фільтри
+            </a>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Пагінація списку (В6.3: paginate_by) -->
+{% if is_paginated %}
+    <nav aria-label="Навігація сторінками каталогу" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Перша">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Остання">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+{% endblock %}

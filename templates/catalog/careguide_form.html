@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Складання пам'ятки догляду - {{ flower.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <a href="{{ flower.get_absolute_url }}" class="btn btn-sm btn-outline-secondary mb-3 rounded-pill">
+            <i class="bi bi-arrow-left"></i> До квітки
+        </a>
+
+        <div class="card form-card">
+            <div class="text-center mb-4">
+                <span class="fs-1">🌿</span>
+                <h3 class="fw-bold mt-2">Скласти пам'ятку догляду</h3>
+                <p class="text-muted small">
+                    Для квітки: <strong>{{ flower.name }}</strong> ({{ flower.category.name }})
+                </p>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.watering_frequency_days.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.watering_frequency_days.label }}
+                        </label>
+                        {{ form.watering_frequency_days }}
+                        <div class="form-text small">Введіть 0, якщо це сухоцвіт.</div>
+                        {% if form.watering_frequency_days.errors %}
+                            <div class="text-danger small mt-1">{{ form.watering_frequency_days.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.temperature_range.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.temperature_range.label }}
+                        </label>
+                        {{ form.temperature_range }}
+                        {% if form.temperature_range.errors %}
+                            <div class="text-danger small mt-1">{{ form.temperature_range.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.light_requirement.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.light_requirement.label }}
+                        </label>
+                        {{ form.light_requirement }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.humidity_level.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.humidity_level.label }}
+                        </label>
+                        {{ form.humidity_level }}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="{{ form.stem_cutting_tips.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.stem_cutting_tips.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.stem_cutting_tips }}
+                        {% if form.stem_cutting_tips.errors %}
+                            <div class="text-danger small mt-1">{{ form.stem_cutting_tips.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="{{ form.florist_secret.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.florist_secret.label }}
+                        </label>
+                        {{ form.florist_secret }}
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                    <a href="{{ flower.get_absolute_url }}" class="btn btn-outline-secondary">Скасувати</a>
+                    <button type="submit" class="btn btn-pink px-4">
+                        <i class="bi bi-check2"></i> Зберегти пам'ятку
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Консультація флориста - Замовлення підбору квітів{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+        <div class="card form-card">
+            <div class="text-center mb-4">
+                <span class="fs-1">💐</span>
+                <h3 class="fw-bold mt-2">Замовлення авторського підбору квітів</h3>
+                <p class="text-muted small">
+                    Опишіть Вашу урочисту подію, побажання та орієнтовний бюджет. Наш провідний флорист складе персональну пропозицію з фотографіями та довідником догляду.
+                </p>
+            </div>
+
+            <!-- Форма без моделі (В5.2) з POST та CSRF (В5.4) -->
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger rounded-4">
+                        {% for error in form.non_field_errors %}
+                            <div><i class="bi bi-exclamation-triangle"></i> {{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.client_name.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.client_name.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.client_name }}
+                        {% if form.client_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.client_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.phone.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                            <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.email.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.budget.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.budget.label }} <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            {{ form.budget }}
+                            <span class="input-group-text">грн</span>
+                        </div>
+                        {% if form.budget.errors %}
+                            <div class="text-danger small mt-1">{{ form.budget.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="{{ form.occasion_description.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.occasion_description.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.occasion_description }}
+                        {% if form.occasion_description.errors %}
+                            <div class="text-danger small mt-1">{{ form.occasion_description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="{{ form.preferences.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.preferences.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.preferences }}
+                        {% if form.preferences.errors %}
+                            <div class="text-danger small mt-1">{{ form.preferences.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top text-center">
+                    <button type="submit" class="btn btn-pink btn-lg px-5">
+                        <i class="bi bi-send-fill"></i> Надіслати запит флористу
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

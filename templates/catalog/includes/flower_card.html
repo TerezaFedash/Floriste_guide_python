@@ -1,0 +1,76 @@
+{% load florist_tags %}
+
+<div class="card card-flower">
+    <div class="card-flower-img-wrapper">
+        <img src="{{ flower.image_url }}" alt="{{ flower.name }}" class="card-flower-img" loading="lazy">
+        
+        <!-- Кнопка додавання до обраного (POST з CSRF) (В5.4, В6.2) -->
+        {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'catalog:toggle_favorite' pk=flower.pk %}" class="m-0">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn-fav-heart {% if in_fav %}active text-danger{% else %}text-muted{% endif %}" title="{% if in_fav %}Видалити з обраного{% else %}Зберегти в обране{% endif %}">
+                    <i class="bi {% if in_fav %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                </button>
+            </form>
+        {% endif %}
+
+        <!-- Статус наявності -->
+        <div class="position-absolute bottom-0 start-0 m-2">
+            {% if flower.in_stock %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small">
+                    <i class="bi bi-check2"></i> В наявності
+                </span>
+            {% else %}
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1 small">
+                    <i class="bi bi-x"></i> Під замовлення
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card-flower-body">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <a href="{% url 'catalog:category_detail' slug=flower.category.slug %}" class="text-decoration-none small text-muted">
+                {{ flower.category.icon_emoji }} {{ flower.category.name }}
+            </a>
+            <!-- Власний DTL-тег складності догляду (В4.3) -->
+            {% difficulty_badge flower.difficulty_level %}
+        </div>
+
+        <h5 class="fw-bold mb-1">
+            <a href="{{ flower.get_absolute_url }}" class="text-decoration-none text-reset">
+                {{ flower.name }}
+            </a>
+        </h5>
+
+        {% if flower.latin_name %}
+            <p class="text-muted small fst-italic mb-2">{{ flower.latin_name }}</p>
+        {% endif %}
+
+        <p class="small text-muted mb-3 flex-grow-1">
+            {{ flower.description|truncatewords:14 }}
+        </p>
+
+        <!-- Приводи / події (Д1: ManyToMany) -->
+        {% if flower.occasions.all %}
+            <div class="d-flex flex-wrap gap-1 mb-3">
+                {% for occ in flower.occasions.all|slice:":2" %}
+                    <a href="{% url 'catalog:occasion_detail' slug=occ.slug %}" class="badge bg-light text-secondary border text-decoration-none small">
+                        #{{ occ.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+            <div>
+                <span class="price-tag">{{ flower.price }}</span>
+                <span class="small text-muted">грн/шт</span>
+            </div>
+            <a href="{{ flower.get_absolute_url }}" class="btn btn-sm btn-pink">
+                Детальніше <i class="bi bi-arrow-right-short"></i>
+            </a>
+        </div>
+    </div>
+</div>

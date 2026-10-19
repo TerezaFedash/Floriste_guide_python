@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load florist_tags %}
+
+{% block title %}Квіти для події: {{ occasion.name }} - Довідник Флориста{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'catalog:home' %}" class="text-decoration-none">Головна</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'catalog:occasion_list' %}" class="text-decoration-none">Події</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ occasion.name }}</li>
+    </ol>
+</nav>
+
+<div class="p-4 p-md-5 rounded-4 bg-body-tertiary border mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <span class="badge bg-{{ occasion.badge_color }}-subtle text-{{ occasion.badge_color }} rounded-pill px-3 py-1 mb-2">
+                {{ occasion.get_season_display }}
+            </span>
+            <h1 class="display-6 fw-bold mb-2">{{ occasion.name }}</h1>
+            <p class="lead text-muted mb-0">{{ occasion.description }}</p>
+        </div>
+        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <a href="{% url 'catalog:consultation' %}" class="btn btn-pink">
+                <i class="bi bi-chat-heart"></i> Замовити авторський букет
+            </a>
+        </div>
+    </div>
+</div>
+
+<h4 class="fw-bold mb-4">Рекомендовані сорти квітів до цієї події:</h4>
+
+<div class="row g-4 mb-4">
+    {% for flower in flowers %}
+        <div class="col-lg-4 col-md-6">
+            {% render_flower_card flower %}
+        </div>
+    {% empty %}
+        <div class="col-12 py-5 text-center text-muted">
+            <p>Наразі квіти для цієї події додаються флористами до каталогу.</p>
+            <a href="{% url 'catalog:flower_list' %}" class="btn btn-pink-outline">
+                Переглянути весь каталог
+            </a>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

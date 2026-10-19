@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Довідник з догляду - Флористичні пам'ятки{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold mb-1">
+            <span>🌿</span> Довідник з догляду за квітами
+        </h2>
+        <p class="text-muted mb-0">
+            Професійні поради флористів для збереження свіжості зрізаних та кімнатних рослин
+        </p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for guide in guides %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 border rounded-4 shadow-sm p-3 bg-body d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <img src="{{ guide.flower.image_url }}" alt="{{ guide.flower.name }}" class="rounded-circle object-fit-cover shadow-sm" style="width: 60px; height: 60px;">
+                        <div>
+                            <h5 class="fw-bold mb-0">
+                                <a href="{% url 'catalog:care_guide_detail' pk=guide.pk %}" class="text-decoration-none text-reset">
+                                    {{ guide.flower.name }}
+                                </a>
+                            </h5>
+                            <span class="small text-muted">{{ guide.flower.category.name }}</span>
+                        </div>
+                    </div>
+
+                    <ul class="list-unstyled small text-muted mb-3">
+                        <li class="mb-2">
+                            <i class="bi bi-droplet-half text-primary me-2"></i>
+                            <strong>Полив:</strong> 
+                            {% if guide.watering_frequency_days == 0 %}
+                                Без води (сухоцвіт)
+                            {% else %}
+                                Кожні {{ guide.watering_frequency_days }} дні
+                            {% endif %}
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-thermometer-half text-danger me-2"></i>
+                            <strong>Температура:</strong> {{ guide.temperature_range }}
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-sun text-warning me-2"></i>
+                            <strong>Світло:</strong> {{ guide.get_light_requirement_display }}
+                        </li>
+                    </ul>
+
+                    {% if guide.florist_secret %}
+                        <div class="p-2 rounded-3 bg-body-tertiary border small text-muted mb-3">
+                            <i class="bi bi-lightbulb text-warning me-1"></i>
+                            {{ guide.florist_secret|truncatewords:12 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="pt-2 border-top d-flex justify-content-between align-items-center">
+                    <span class="small text-muted">
+                        {% if guide.expert %}<i class="bi bi-patch-check-fill text-primary"></i> {{ guide.expert.get_full_name|default:guide.expert.username }}{% endif %}
+                    </span>
+                    <a href="{% url 'catalog:care_guide_detail' pk=guide.pk %}" class="btn btn-sm btn-pink-outline">
+                        Читати інструкцію <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12 py-5 text-center text-muted">
+            <p>Довідники догляду ще не додані.</p>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Пагінація -->
+{% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a></li>
+            {% endif %}
+            {% for num in paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+{% endblock %}

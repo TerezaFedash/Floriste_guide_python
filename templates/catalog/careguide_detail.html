@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Пам'ятка догляду: {{ guide.flower.name }} - Довідник Флориста{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'catalog:home' %}" class="text-decoration-none">Головна</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'catalog:care_guide_list' %}" class="text-decoration-none">Довідник догляду</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ guide.flower.name }}</li>
+    </ol>
+</nav>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-lg-8">
+        <div class="card rounded-4 border shadow-sm p-4 bg-body mb-4">
+            <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                <img src="{{ guide.flower.image_url }}" alt="{{ guide.flower.name }}" class="rounded-4 object-fit-cover shadow-sm" style="width: 100px; height: 100px;">
+                <div>
+                    <span class="badge bg-secondary-subtle text-secondary border rounded-pill px-3 py-1 mb-1">
+                        {{ guide.flower.category.name }}
+                    </span>
+                    <h2 class="fw-bold mb-1">{{ guide.flower.name }}</h2>
+                    <a href="{{ guide.flower.get_absolute_url }}" class="small text-pink text-decoration-none">
+                        <i class="bi bi-box-arrow-up-right"></i> Переглянути картку в каталозі
+                    </a>
+                </div>
+            </div>
+
+            <!-- Таблиця ключових параметрів мікроклімату -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="p-3 rounded-4 bg-body-tertiary border">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-droplet-half text-primary fs-4"></i>
+                            <h6 class="fw-bold mb-0">Частота заміни води / поливу</h6>
+                        </div>
+                        <p class="mb-0 text-muted small">
+                            {% if guide.watering_frequency_days == 0 %}
+                                Рослина-сухоцвіт: категорично заборонено ставити у воду.
+                            {% else %}
+                                Заміна свіжої холодної води кожні <strong>{{ guide.watering_frequency_days }} дні</strong>.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 rounded-4 bg-body-tertiary border">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-thermometer-half text-danger fs-4"></i>
+                            <h6 class="fw-bold mb-0">Оптимальна температура</h6>
+                        </div>
+                        <p class="mb-0 text-muted small">
+                            Рекомендовано тримати при <strong>{{ guide.temperature_range }}</strong> подалі від опалювальних приладів.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 rounded-4 bg-body-tertiary border">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-sun text-warning fs-4"></i>
+                            <h6 class="fw-bold mb-0">Вимоги до освітлення</h6>
+                        </div>
+                        <p class="mb-0 text-muted small">
+                            <strong>{{ guide.get_light_requirement_display }}</strong>. Уникати прямих пекучих променів.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 rounded-4 bg-body-tertiary border">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-moisture text-info fs-4"></i>
+                            <h6 class="fw-bold mb-0">Вологість середовища</h6>
+                        </div>
+                        <p class="mb-0 text-muted small">
+                            <strong>{{ guide.get_humidity_level_display }}</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правила підрізання -->
+            <div class="mb-4">
+                <h5 class="fw-bold mb-2">
+                    <i class="bi bi-scissors text-secondary"></i> Правила підрізання та підготовки вази
+                </h5>
+                <div class="p-3 rounded-4 bg-body-tertiary border">
+                    <p class="mb-0 text-muted" style="line-height: 1.7;">
+                        {{ guide.stem_cutting_tips|linebreaksbr }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Секрет флориста -->
+            {% if guide.florist_secret %}
+                <div class="alert alert-warning border-0 rounded-4 p-3 mb-4">
+                    <h5 class="fw-bold mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-lightbulb-fill text-warning"></i> Професійний секрет флориста
+                    </h5>
+                    <p class="mb-0 text-dark small" style="line-height: 1.6;">
+                        {{ guide.florist_secret }}
+                    </p>
+                </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-between align-items-center text-muted small pt-3 border-top">
+                <span>
+                    Останнє оновлення: {{ guide.updated_at|date:"d.m.Y" }}
+                    {% if guide.expert %} | Експерт: <strong>{{ guide.expert.get_full_name|default:guide.expert.username }}</strong>{% endif %}
+                </span>
+                <a href="{% url 'catalog:flower_detail' pk=guide.flower.pk %}" class="btn btn-pink-outline btn-sm">
+                    До квітки в каталозі
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

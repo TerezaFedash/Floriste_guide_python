@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load florist_tags %}
+
+{% block title %}Головна - Довідник Флориста{% endblock %}
+
+{% block content %}
+<!-- Герой-банер із рожевою флористичною естетикою -->
+<section class="hero-banner text-center position-relative overflow-hidden">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <span class="badge bg-white text-danger border shadow-sm px-3 py-2 rounded-pill mb-3 fw-semibold">
+                🌸 Електронний довідник флористичного мистецтва
+            </span>
+            <h1 class="display-4 fw-bold mb-3">
+                Відкрийте гармонію квітів, тонкощі догляду та естетику букетів
+            </h1>
+            <p class="lead text-muted mb-4">
+                Повний каталог сортових квітів, професійні пам'ятки флориста щодо продовження життя рослин та індивідуальний підбір композицій до будь-якої урочистої події.
+            </p>
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <a href="{% url 'catalog:flower_list' %}" class="btn btn-pink btn-lg px-4 shadow-sm">
+                    <i class="bi bi-grid-fill"></i> Каталог квітів
+                </a>
+                <a href="{% url 'catalog:care_guide_list' %}" class="btn btn-pink-outline btn-lg px-4">
+                    <i class="bi bi-journal-text"></i> Довідник догляду
+                </a>
+                <a href="{% url 'catalog:consultation' %}" class="btn btn-outline-secondary btn-lg px-4 rounded-pill">
+                    <i class="bi bi-chat-heart"></i> Консультація
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Статистика каталогу (Д4: aggregate / annotate) -->
+<section class="mb-5">
+    <div class="text-center mb-4">
+        <h3 class="fw-bold">Статистика квіткового каталогу</h3>
+        <p class="text-muted small">Дані агреговані за допомогою Django ORM (aggregate & annotate)</p>
+    </div>
+    <div class="row g-3">
+        <div class="col-6 col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">{{ stats.total_flowers|default:0 }}</div>
+                <div class="text-muted small mt-1">Сортів квітів у базі</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">{{ stats.avg_price|floatformat:1|default:"0.0" }} <span class="fs-6">грн</span></div>
+                <div class="text-muted small mt-1">Середня вартість квітки</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">{{ stats.min_price|floatformat:0|default:0 }} - {{ stats.max_price|floatformat:0|default:0 }} <span class="fs-6">грн</span></div>
+                <div class="text-muted small mt-1">Діапазон цін за стебло</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">{{ categories_with_counts|length }}</div>
+                <div class="text-muted small mt-1">Активних категорій</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Категорії квітів -->
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold mb-0">Категорії рослин</h3>
+        <a href="{% url 'catalog:flower_list' %}" class="text-decoration-none text-muted small">
+            Усі в каталозі <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    <div class="row g-3">
+        {% for cat in categories_with_counts %}
+            <div class="col-6 col-md-3">
+                <a href="{% url 'catalog:category_detail' slug=cat.slug %}" class="card text-decoration-none p-3 h-100 border-0 shadow-sm rounded-4 text-center transition-hover bg-body-tertiary">
+                    <div class="fs-1 mb-2">{{ cat.icon_emoji }}</div>
+                    <h6 class="fw-bold text-reset mb-1">{{ cat.name }}</h6>
+                    <span class="badge bg-pink text-white rounded-pill small">{{ cat.flower_count }} видів</span>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Підбір квітів до урочистих подій (Підбір квітів для подій) -->
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0">Підбір квітів для подій</h3>
+            <p class="text-muted small mb-0">Оберіть привід для отримання професійних рекомендацій</p>
+        </div>
+        <a href="{% url 'catalog:occasion_list' %}" class="btn btn-sm btn-pink-outline">
+            Всі приводи
+        </a>
+    </div>
+    <div class="row g-3">
+        {% for occ in occasions %}
+            <div class="col-md-4 col-sm-6">
+                <div class="card h-100 border rounded-4 p-3 shadow-sm bg-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge bg-{{ occ.badge_color }}-subtle text-{{ occ.badge_color }} rounded-pill px-3 py-1">
+                            {{ occ.get_season_display }}
+                        </span>
+                        <i class="bi bi-balloon-heart text-danger fs-5"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">{{ occ.name }}</h5>
+                    <p class="text-muted small mb-3 flex-grow-1">{{ occ.description|truncatewords:15 }}</p>
+                    <a href="{% url 'catalog:occasion_detail' slug=occ.slug %}" class="btn btn-sm btn-outline-secondary rounded-pill">
+                        Підібрати квіти <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Рекомендовані свіжі квіти (Вітрина каталогу) -->
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">Свіжі надходження у вітрині</h3>
+            <p class="text-muted small mb-0">Найпопулярніші сорти квітів із наявності</p>
+        </div>
+        <a href="{% url 'catalog:flower_list' %}" class="btn btn-pink-outline">
+            Повний каталог <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    <div class="row g-4">
+        {% for flower in featured_flowers %}
+            <div class="col-lg-3 col-md-6">
+                <!-- Використання власного тегу render_flower_card (В4.3) -->
+                {% render_flower_card flower %}
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-4">
+                <p class="text-muted">Квіти наразі оновлюються в каталозі.</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Банер довідника з догляду -->
+<section class="p-4 p-md-5 rounded-4 bg-body-tertiary border text-center">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <span class="fs-1 d-block mb-2">🌿</span>
+            <h3 class="fw-bold mb-2">Секрети догляду від професійних флористів</h3>
+            <p class="text-muted mb-4">
+                Дізнайтеся, як правильно підрізати стебла троянд, освіжити зів'ялу гортензію та підтримувати ідеальну вологість для кімнатних орхідей.
+            </p>
+            <a href="{% url 'catalog:care_guide_list' %}" class="btn btn-pink px-4">
+                Відкрити довідник догляду
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

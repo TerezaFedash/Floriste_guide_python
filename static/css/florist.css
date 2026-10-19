@@ -1,0 +1,273 @@
+/* ==========================================================================
+   Довідник Флориста - Головна таблиця стилів (В4.2)
+   Палітра: Світло-рожева флористична естетика з підтримкою темної теми
+   ========================================================================== */
+
+:root {
+    --bg-primary: #fff8fa;
+    --bg-secondary: #fdf0f4;
+    --bg-card: #ffffff;
+    --text-primary: #2d2327;
+    --text-secondary: #745f66;
+    --accent-pink: #e87a90;
+    --accent-pink-hover: #d4637b;
+    --accent-soft-pink: #fae4ea;
+    --accent-green: #3d7a5a;
+    --border-color: #f3d4dc;
+    --card-shadow: 0 10px 25px rgba(232, 122, 144, 0.12);
+    --hero-gradient: linear-gradient(135deg, #fff0f5 0%, #fde2e8 50%, #fae8ee 100%);
+}
+
+[data-bs-theme="dark"] {
+    --bg-primary: #181316;
+    --bg-secondary: #221a1f;
+    --bg-card: #281e25;
+    --text-primary: #f9eaef;
+    --text-secondary: #bba2ab;
+    --accent-pink: #f294a8;
+    --accent-pink-hover: #fcaec0;
+    --accent-soft-pink: #38242f;
+    --accent-green: #52b788;
+    --border-color: #45313c;
+    --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+    --hero-gradient: linear-gradient(135deg, #251b22 0%, #301f2a 50%, #20171d 100%);
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+/* Навігаційна панель */
+.navbar-florist {
+    background-color: var(--bg-card);
+    border-bottom: 2px solid var(--border-color);
+    box-shadow: 0 4px 15px rgba(232, 122, 144, 0.08);
+}
+
+.navbar-brand-florist {
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: var(--accent-pink) !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-link-florist {
+    color: var(--text-primary) !important;
+    font-weight: 500;
+    padding: 0.5rem 0.9rem !important;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+}
+
+.nav-link-florist:hover, .nav-link-florist.active {
+    background-color: var(--accent-soft-pink);
+    color: var(--accent-pink) !important;
+}
+
+/* Герой-секція */
+.hero-banner {
+    background: var(--hero-gradient);
+    border-radius: 24px;
+    padding: 3.5rem 2rem;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    margin-bottom: 2.5rem;
+}
+
+/* Картки квітів */
+.card-flower {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-flower:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 30px rgba(232, 122, 144, 0.22);
+}
+
+.card-flower-img-wrapper {
+    position: relative;
+    height: 230px;
+    overflow: hidden;
+    background-color: var(--bg-secondary);
+}
+
+.card-flower-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.card-flower:hover .card-flower-img {
+    transform: scale(1.05);
+}
+
+.card-flower-body {
+    padding: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.price-tag {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--accent-pink);
+}
+
+/* Кнопки */
+.btn-pink {
+    background-color: var(--accent-pink);
+    border-color: var(--accent-pink);
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 30px;
+    padding: 0.5rem 1.3rem;
+    transition: all 0.2s ease;
+}
+
+.btn-pink:hover, .btn-pink:focus {
+    background-color: var(--accent-pink-hover);
+    border-color: var(--accent-pink-hover);
+    color: #ffffff;
+    box-shadow: 0 6px 15px rgba(232, 122, 144, 0.35);
+}
+
+.btn-pink-outline {
+    background-color: transparent;
+    border: 2px solid var(--accent-pink);
+    color: var(--accent-pink);
+    font-weight: 600;
+    border-radius: 30px;
+    padding: 0.45rem 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.btn-pink-outline:hover {
+    background-color: var(--accent-pink);
+    color: #ffffff;
+}
+
+/* Бейджі складності догляду */
+.badge-easy {
+    background-color: #d8f3dc;
+    color: #1b4332;
+    border: 1px solid #b7e4c7;
+}
+
+.badge-medium {
+    background-color: #fff1d6;
+    color: #7a4800;
+    border: 1px solid #ffe1a8;
+}
+
+.badge-hard {
+    background-color: #fde2e4;
+    color: #8a1827;
+    border: 1px solid #fac3c7;
+}
+
+/* Кнопка обраного */
+.btn-fav-heart {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.88);
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease, background 0.2s ease;
+    cursor: pointer;
+    z-index: 2;
+}
+
+[data-bs-theme="dark"] .btn-fav-heart {
+    background: rgba(35, 25, 30, 0.85);
+}
+
+.btn-fav-heart:hover {
+    transform: scale(1.15);
+}
+
+.btn-fav-heart.active {
+    color: #e63946;
+}
+
+/* Блоки статистики на головній */
+.stat-box {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s ease;
+}
+
+.stat-box:hover {
+    transform: translateY(-3px);
+}
+
+.stat-number {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--accent-pink);
+}
+
+/* Футер */
+.footer-florist {
+    background-color: var(--bg-card);
+    border-top: 2px solid var(--border-color);
+    padding: 2.5rem 0 1.5rem;
+    margin-top: 3.5rem;
+    color: var(--text-secondary);
+}
+
+/* Форми */
+.form-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    padding: 2.5rem;
+}
+
+/* Пагінація */
+.pagination .page-item .page-link {
+    color: var(--accent-pink);
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+    border-radius: 12px;
+    margin: 0 3px;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--accent-pink);
+    border-color: var(--accent-pink);
+    color: #ffffff;
+}
