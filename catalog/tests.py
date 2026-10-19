@@ -130,6 +130,11 @@ class FloristViewsAndSecurityTests(TestCase):
                 "owner": self.florist
             }
         )
+        self.admin, _ = User.objects.get_or_create(username="superadmin_test")
+        self.admin.is_superuser = True
+        self.admin.is_staff = True
+        self.admin.set_password("admin12345")
+        self.admin.save()
 
     def test_home_view(self):
         """В6.2: Перевірка головної сторінки (FBV) та агрегатної статистики."""
@@ -155,15 +160,24 @@ class FloristViewsAndSecurityTests(TestCase):
         self.assertContains(response, "Унікальна Гвоздика Шабо")
 
     def test_flower_create_login_required(self):
-        """В7.3: Створення доступне лише після входу."""
+        """В7.3: Створення недоступне для неавторизованих."""
         url = reverse("catalog:flower_create")
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse("catalog:login"), response.url)
 
-    def test_flower_create_owner_assigned(self):
-        """В7.2: Власник запису автоматично присвоюється у form_valid()."""
+    def test_client_cannot_create_flower(self):
+        """Тільки адміністратор може додавати нові квіти: клієнт отримує відмову."""
         self.client.login(username="unique_client1", password="pass12345")
+        url = reverse("catalog:flower_create")
+        response = self.client.get(url)
+        # Перенаправлення на каталог із забороною
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("catalog:flower_list"))
+
+    def test_flower_create_by_admin(self):
+        """В7.2: Адміністратор успішно створює квітку, автор присвоюється у form_valid()."""
+        self.client.login(username="superadmin_test", password="admin12345")
         data = {
             "name": "Нова тестувальна квітка",
             "latin_name": "Tulipa gesneriana",
@@ -177,7 +191,7 @@ class FloristViewsAndSecurityTests(TestCase):
         response = self.client.post(reverse("catalog:flower_create"), data)
         self.assertEqual(response.status_code, 302)
         created_flower = Flower.objects.get(name="Нова тестувальна квітка")
-        self.assertEqual(created_flower.owner, self.user)
+        self.assertEqual(created_flower.owner, self.admin)
 
     def test_prevent_editing_other_user_record(self):
         """В7.3, В7.5: Заборона редагування чужого запису звичайним користувачем."""

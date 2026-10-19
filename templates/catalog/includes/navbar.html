@@ -70,11 +70,13 @@
                             <span class="d-none d-md-inline">Обране</span>
                         </a>
 
-                        <!-- Кнопка додати квітку -->
-                        <a href="{% url 'catalog:flower_create' %}" class="btn btn-sm btn-pink d-flex align-items-center gap-1">
-                            <i class="bi bi-plus-circle"></i>
-                            <span class="d-none d-md-inline">Додати</span>
-                        </a>
+                        <!-- Кнопка додати квітку (тільки для адміністратора) -->
+                        {% if user.is_superuser %}
+                            <a href="{% url 'catalog:flower_create' %}" class="btn btn-sm btn-pink d-flex align-items-center gap-1" title="Додати квітку до каталогу (лише для адміністратора)">
+                                <i class="bi bi-plus-circle"></i>
+                                <span class="d-none d-md-inline">Додати квітку</span>
+                            </a>
+                        {% endif %}
 
                         <!-- Меню користувача -->
                         <div class="dropdown">

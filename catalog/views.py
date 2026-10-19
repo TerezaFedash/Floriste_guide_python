@@ -199,20 +199,33 @@ class FlowerDetailView(DetailView):
         return context
 
 
-class FlowerCreateView(LoginRequiredMixin, CreateView):
+class FlowerCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     """
     В6.1 (CreateView): Створення нової квітки.
-    В7.3: Доступ лише для автентифікованих користувачів (LoginRequiredMixin).
+    Доступ дозволено виключно адміністратору системи (is_superuser).
     В7.2: Власник запису присвоюється у form_valid(), а не вибирається у формі.
     """
     model = Flower
     form_class = FlowerForm
     template_name = "catalog/flower_form.html"
 
+    def test_func(self):
+        user = self.request.user
+        return user.is_authenticated and user.is_superuser
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+        messages.error(
+            self.request,
+            "Лише адміністратор має право додавати нові квіти до каталогу. Флористи та клієнти не мають доступу до цієї дії."
+        )
+        return redirect("catalog:flower_list")
+
     def form_valid(self, form):
         # В7.2: Присвоєння автора на рівні сервера
         form.instance.owner = self.request.user
-        messages.success(self.request, f"Квітку «{form.instance.name}» успішно додано до каталогу!")
+        messages.success(self.request, f"Квітку «{form.instance.name}» успішно додано до каталогу адміністратором!")
         return super().form_valid(form)
 
 
