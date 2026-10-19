@@ -1,0 +1,24 @@
+# Python & Virtualenv
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# Database (local test sqlite if used)
+*.sqlite3
+
+# Static / Media uploads
+media/
+staticfiles/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
