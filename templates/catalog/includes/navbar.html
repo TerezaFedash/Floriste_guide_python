@@ -1,18 +1,18 @@
 <header>
     <nav class="navbar navbar-expand-lg navbar-florist sticky-top">
         <div class="container">
-            <!-- Логотип і назва (В1.4: url tag) -->
+
             <a class="navbar-brand navbar-brand-florist" href="{% url 'catalog:home' %}">
                 <span>🌸</span>
                 <span>Довідник Флориста</span>
             </a>
 
-            <!-- Мобільна кнопка гамбургера -->
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#floristNavbar" aria-controls="floristNavbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <!-- Основні пункти меню -->
+
             <div class="collapse navbar-collapse" id="floristNavbar">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
@@ -31,7 +31,7 @@
                         </a>
                     </li>
 
-                    <!-- Випадаючий список категорій -->
+
                     <li class="nav-item dropdown">
                         <a class="nav-link nav-link-florist dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-tags"></i> Категорії
@@ -56,21 +56,20 @@
                     </li>
                 </ul>
 
-                <!-- Праві елементи меню: теми, обране, кабінет, авторизація -->
+
                 <div class="d-flex align-items-center gap-2">
-                    <!-- Кнопка перемикача тем (світла / темна) (Д7) -->
+
                     <button class="btn btn-sm btn-pink-outline d-flex align-items-center gap-1" id="themeToggleBtn" type="button" title="Перемкнути тему">
                         <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
                     </button>
 
                     {% if user.is_authenticated %}
-                        <!-- Список обраного -->
+
                         <a href="{% url 'catalog:favorites_list' %}" class="btn btn-sm btn-pink-outline d-flex align-items-center gap-1" title="Моє обране">
                             <i class="bi bi-heart-fill text-danger"></i>
                             <span class="d-none d-md-inline">Обране</span>
                         </a>
 
-                        <!-- Кнопка додати квітку (тільки для адміністратора) -->
                         {% if user.is_superuser %}
                             <a href="{% url 'catalog:flower_create' %}" class="btn btn-sm btn-pink d-flex align-items-center gap-1" title="Додати квітку до каталогу (лише для адміністратора)">
                                 <i class="bi bi-plus-circle"></i>
@@ -78,7 +77,7 @@
                             </a>
                         {% endif %}
 
-                        <!-- Меню користувача -->
+
                         <div class="dropdown">
                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1 rounded-pill" type="button" id="userMenuBtn" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-person-circle"></i>
@@ -86,7 +85,7 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm" aria-labelledby="userMenuBtn">
                                 {% if is_florist %}
-                                    <!-- В7.4: Посилання для привілейованої ролі флориста -->
+              
                                     <li>
                                         <a class="dropdown-item fw-bold text-primary" href="{% url 'catalog:florist_dashboard' %}">
                                             <i class="bi bi-speedometer2"></i> Панель флориста
@@ -108,7 +107,7 @@
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <!-- В7.1: Вихід з облікового запису виключно через POST (Django 5+) -->
+                                    
                                     <form method="post" action="{% url 'catalog:logout' %}" class="px-2 m-0">
                                         {% csrf_token %}
                                         <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2 p-1">
@@ -119,7 +118,6 @@
                             </ul>
                         </div>
                     {% else %}
-                        <!-- Авторизація для гостей -->
                         <a href="{% url 'catalog:login' %}" class="btn btn-sm btn-pink-outline">
                             <i class="bi bi-box-arrow-in-right"></i> Вхід
                         </a>

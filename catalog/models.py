@@ -1,14 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
-from catalog.validators import validate_positive_price, validate_latin_name
+from catalog.validators import validate_latin_name
 
 
 class Category(models.Model):
-    """
-    Модель 1: Категорія квітів (В3.1, В3.2, Д3).
-    Приклади: Зрізані квіти, Кімнатні рослини, Екзотичні квіти, Зелень для букетів.
-    """
+    category_id = models.AutoField(primary_key=True, db_column="category_id")
     name = models.CharField(
         max_length=100,
         unique=True,
@@ -30,6 +27,7 @@ class Category(models.Model):
     )
 
     class Meta:
+        db_table = "catalog_category"
         verbose_name = "Категорія"
         verbose_name_plural = "Категорії"
         ordering = ["name"]
@@ -42,10 +40,7 @@ class Category(models.Model):
 
 
 class Occasion(models.Model):
-    """
-    Модель 2: Привід / Подія для флористичного підбору (В3.1, В3.2, Д1, Д3).
-    Приклади: Весілля, День народження, Романтичне побачення, День матері, Офіційне привітання.
-    """
+
     SEASON_CHOICES = [
         ("all_year", "Цілий рік"),
         ("spring", "Весняний період"),
@@ -54,6 +49,7 @@ class Occasion(models.Model):
         ("winter", "Зимові свята"),
     ]
 
+    occasion_id = models.AutoField(primary_key=True, db_column="occasion_id")
     name = models.CharField(
         max_length=100,
         unique=True,
@@ -81,6 +77,7 @@ class Occasion(models.Model):
     )
 
     class Meta:
+        db_table = "catalog_occasion"
         verbose_name = "Привід / Подія"
         verbose_name_plural = "Приводи та події"
         ordering = ["name"]
@@ -93,78 +90,24 @@ class Occasion(models.Model):
 
 
 class Flower(models.Model):
-    """
-    Модель 3 (Основна сутність): Квітка (В3.1, В3.2, В6.3, Д1, Д2, Д3, Д6).
-    Пов'язана з Category (ForeignKey), Occasion (ManyToManyField) та User (власник/автор).
-    """
     DIFFICULTY_CHOICES = [
         ("easy", "Невибаглива (легко)"),
         ("medium", "Середня складність"),
         ("hard", "Вимоглива до умов"),
     ]
-
-    name = models.CharField(
-        max_length=150,
-        verbose_name="Назва квітки"
-    )
-    latin_name = models.CharField(
-        max_length=150,
-        blank=True,
-        validators=[validate_latin_name],
-        verbose_name="Ботанічна (латинська) назва"
-    )
-    # Д2: on_delete=models.PROTECT — категорію не можна видалити, якщо в ній є квіти.
-    # Це захищає каталог від випадкової втрати класифікації.
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.PROTECT,
-        related_name="flowers",
-        verbose_name="Категорія"
-    )
-    # Д1: ManyToManyField з related_name для швидкого зворотного доступу occasion.flowers.all()
-    occasions = models.ManyToManyField(
-        Occasion,
-        related_name="flowers",
-        blank=True,
-        verbose_name="Рекомендовані події"
-    )
-    description = models.TextField(
-        verbose_name="Опис, символізм та флористичне значення"
-    )
-    price = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        validators=[validate_positive_price],
-        verbose_name="Орієнтовна ціна (грн/шт)"
-    )
-    in_stock = models.BooleanField(
-        default=True,
-        verbose_name="Є в наявності в майстерні"
-    )
-    difficulty_level = models.CharField(
-        max_length=20,
-        choices=DIFFICULTY_CHOICES,
-        default="easy",
-        verbose_name="Складність догляду"
-    )
-    image_url = models.URLField(
-        max_length=500,
-        default="https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80",
-        verbose_name="URL фотографії"
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата додавання"
-    )
-    # В3.1, Д2: on_delete=models.CASCADE — при видаленні користувача його створені записи видаляються.
-    owner = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="flowers",
-        verbose_name="Автор запису"
-    )
-
+    flower_id = models.AutoField(primary_key=True, db_column="flower_id")
+    name = models.CharField(max_length=150, verbose_name="Назва квітки")
+    latin_name = models.CharField(max_length=150, blank=True, validators=[validate_latin_name], verbose_name="Ботанічна (латинська) назва")
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="flowers", db_column="category_id", verbose_name="Категорія")
+    occasions = models.ManyToManyField(Occasion, related_name="flowers", blank=True, db_table="catalog_flower_occasions", verbose_name="Рекомендовані події")
+    description = models.TextField(verbose_name="Опис, символізм та флористичне значення")
+    fun_fact = models.TextField(blank=True, verbose_name="Цікавий факт / коротка історія")
+    difficulty_level = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, default="easy", verbose_name="Складність догляду")
+    image_url = models.URLField(max_length=2000, blank=True, default="https://plus.unsplash.com/premium_photo-1676475964992-6404b8db0b53?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D", verbose_name="URL фотографії")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата додавання")
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="flowers", db_column="owner_id", verbose_name="Автор запису")
     class Meta:
+        db_table = "catalog_flower"
         verbose_name = "Квітка"
         verbose_name_plural = "Квіти"
         ordering = ["-created_at"]
@@ -172,20 +115,14 @@ class Flower(models.Model):
             ("can_publish_catalog", "Може публікувати квіти у вітрину каталогу"),
             ("can_manage_care_guide", "Може складати та редагувати довідники догляду"),
         ]
-
     def __str__(self):
         return f"{self.name} ({self.category.name})"
-
     def get_absolute_url(self):
-        # В6.3: get_absolute_url() у моделі
         return reverse("catalog:flower_detail", kwargs={"pk": self.pk})
 
 
 class CareGuide(models.Model):
-    """
-    Модель 4: Довідник з догляду за квіткою (В3.1, В3.2, Д2, Д3).
-    Зв'язок OneToOne з Flower та ForeignKey на експерта-флориста (User).
-    """
+
     LIGHT_CHOICES = [
         ("direct_sun", "Пряме сонячне світло"),
         ("bright_indirect", "Яскраве розсіяне світло"),
@@ -199,12 +136,13 @@ class CareGuide(models.Model):
         ("high", "Висока (понад 60%)"),
     ]
 
-    # Д2: on_delete=models.CASCADE — довідник нерозривно пов'язаний із квіткою.
-    # Якщо квітку видалено, її довідник також видаляється.
+
+    careguide_id = models.AutoField(primary_key=True, db_column="careguide_id")
     flower = models.OneToOneField(
         Flower,
         on_delete=models.CASCADE,
         related_name="care_guide",
+        db_column="flower_id",
         verbose_name="Квітка"
     )
     watering_frequency_days = models.PositiveIntegerField(
@@ -228,6 +166,15 @@ class CareGuide(models.Model):
         default="medium",
         verbose_name="Рівень вологості"
     )
+    soil_type = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Рекомендований тип ґрунту (для горщикових рослин)"
+    )
+    fun_fact = models.TextField(
+        blank=True,
+        verbose_name="Цікавий факт про рослину"
+    )
     stem_cutting_tips = models.TextField(
         verbose_name="Правила підрізання стебел і підготовки води"
     )
@@ -239,18 +186,19 @@ class CareGuide(models.Model):
         auto_now=True,
         verbose_name="Дата оновлення довідника"
     )
-    # Д2: on_delete=models.SET_NULL — якщо обліковий запис флориста видалено,
-    # корисна інструкція зберігається в довіднику.
+
     expert = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="authored_guides",
+        db_column="expert_id",
         verbose_name="Експерт-укладач"
     )
 
     class Meta:
+        db_table = "catalog_careguide"
         verbose_name = "Довідник з догляду"
         verbose_name_plural = "Довідники з догляду"
         ordering = ["flower__name"]
@@ -263,20 +211,19 @@ class CareGuide(models.Model):
 
 
 class Favorite(models.Model):
-    """
-    Модель 5: Список обраних квітів користувача (В3.1, Д3).
-    Зв'язок між User та Flower із UniqueConstraint, щоб уникнути дублікатів.
-    """
+    favorite_id = models.AutoField(primary_key=True, db_column="favorite_id")
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="favorites",
+        db_column="user_id",
         verbose_name="Користувач"
     )
     flower = models.ForeignKey(
         Flower,
         on_delete=models.CASCADE,
         related_name="favorited_by",
+        db_column="flower_id",
         verbose_name="Квітка"
     )
     created_at = models.DateTimeField(
@@ -285,10 +232,11 @@ class Favorite(models.Model):
     )
 
     class Meta:
+        db_table = "catalog_favorite"
         verbose_name = "Обрана квітка"
         verbose_name_plural = "Обрані квіти"
         ordering = ["-created_at"]
-        # Д3: UniqueConstraint для запобігання повторному додаванню однієї квітки
+        
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "flower"],
@@ -298,3 +246,53 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user.username} ❤️ {self.flower.name}"
+
+
+class ConsultationRequest(models.Model):
+ 
+    STATUS_CHOICES = [
+        ("new", "Новий запит"),
+        ("in_progress", "В обробці"),
+        ("completed", "Завершено"),
+        ("cancelled", "Скасовано"),
+    ]
+
+    consultation_id = models.AutoField(primary_key=True, db_column="consultation_id")
+    client_name = models.CharField(
+        max_length=100,
+        verbose_name="Ім'я клієнта"
+    )
+    phone = models.CharField(
+        max_length=20,
+        verbose_name="Номер телефону"
+    )
+    email = models.EmailField(
+        verbose_name="Email для зв'язку"
+    )
+    occasion_description = models.CharField(
+        max_length=200,
+        verbose_name="До якої події"
+    )
+    preferences = models.TextField(
+        blank=True,
+        verbose_name="Побажання та деталі"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="new",
+        verbose_name="Статус запиту"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата та час запиту"
+    )
+
+    class Meta:
+        db_table = "catalog_consultationrequest"
+        verbose_name = "Запит на консультацію"
+        verbose_name_plural = "Запити на консультації"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Запит #{self.pk} від {self.client_name} ({self.created_at.strftime('%d.%m.%Y %H:%M')})"

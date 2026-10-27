@@ -66,6 +66,17 @@
                         {% endif %}
                     </div>
 
+                    <div class="col-12">
+                        <label for="{{ form.role.id_for_label }}" class="form-label fw-semibold">
+                            <i class="bi bi-person-badge"></i> {{ form.role.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.role }}
+                        {% if form.role.errors %}
+                            <div class="text-danger small mt-1">{{ form.role.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text small text-muted">Виберіть «Флорист» для створення довідників догляду та доступу до панелі флориста або «Клієнт» для підбору букетів та збереження в обране.</div>
+                    </div>
+
                     <div class="col-md-6">
                         <label for="{{ form.password1.id_for_label }}" class="form-label fw-semibold">
                             Пароль <span class="text-danger">*</span>
@@ -93,6 +104,21 @@
                     </button>
                 </div>
             </form>
+
+            <div class="d-flex align-items-center my-3">
+                <hr class="flex-grow-1 my-0 text-muted">
+                <span class="px-3 text-muted small">або</span>
+                <hr class="flex-grow-1 my-0 text-muted">
+            </div>
+
+            <div class="social mb-3">
+                <form method="post" action="{% url 'social:begin' 'google-oauth2' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-pink-outline w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-google"></i> Увійти через Google
+                    </button>
+                </form>
+            </div>
 
             <div class="text-center small mt-3">
                 <span class="text-muted">Вже зареєстровані?</span>

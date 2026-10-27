@@ -12,7 +12,7 @@
             <span>📊</span> Аналітична панель флориста
         </h2>
         <p class="text-muted mb-0">
-            Контроль складських залишків, аналітика цін та статус наповненості довідників з догляду
+            Управління запитами клієнтів на консультації, аналітика категорій та статус довідників з догляду
         </p>
     </div>
     <div class="col-md-4 text-md-end mt-3 mt-md-0">
@@ -22,7 +22,6 @@
     </div>
 </div>
 
-<!-- Зведені аналітичні картки -->
 <div class="row g-3 mb-5">
     <div class="col-md-4">
         <div class="card p-3 rounded-4 border-0 shadow-sm bg-body">
@@ -52,37 +51,35 @@
         <div class="card p-3 rounded-4 border-0 shadow-sm bg-body">
             <div class="d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="text-muted small">Позицій під замовлення (немає в наявності)</span>
-                    <h3 class="fw-bold mb-0 text-warning mt-1">{{ out_of_stock_count }}</h3>
+                    <span class="text-muted small">Нових запитів на консультацію</span>
+                    <h3 class="fw-bold mb-0 text-primary mt-1">{{ new_consultations_count|default:0 }}</h3>
                 </div>
-                <div class="fs-1 text-warning opacity-75">⚠️</div>
+                <div class="fs-1 text-primary opacity-75">💌</div>
             </div>
         </div>
     </div>
 </div>
 
 <div class="row g-4 mb-5">
-    <!-- Аналітика за категоріями -->
+
     <div class="col-lg-6">
         <div class="card rounded-4 border shadow-sm p-4 h-100 bg-body">
-            <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill text-primary"></i> Розподіл та середня вартість за категоріями</h5>
+            <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill text-primary"></i> Розподіл сортів за категоріями</h5>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Категорія</th>
-                            <th class="text-center">Кількість видів</th>
-                            <th class="text-end">Сер. ціна (грн)</th>
+                            <th class="text-end">Кількість видів</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for cat in category_analytics %}
                             <tr>
                                 <td>{{ cat.icon_emoji }} {{ cat.name }}</td>
-                                <td class="text-center">
-                                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ cat.count }}</span>
+                                <td class="text-end">
+                                    <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">{{ cat.count }}</span>
                                 </td>
-                                <td class="text-end fw-bold text-pink">{{ cat.avg_price|floatformat:2|default:"0.00" }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -91,7 +88,6 @@
         </div>
     </div>
 
-    <!-- Швидке керування довідниками догляду -->
     <div class="col-lg-6">
         <div class="card rounded-4 border shadow-sm p-4 h-100 bg-body">
             <h5 class="fw-bold mb-3"><i class="bi bi-journal-medical text-success"></i> Статус пам'яток догляду для квітів</h5>
@@ -140,5 +136,65 @@
             </div>
         </div>
     </div>
+</div>
+
+<div class="card rounded-4 border shadow-sm p-4 bg-body mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">
+            <i class="bi bi-inbox-fill text-pink"></i> Останні запити на консультацію від клієнтів
+        </h5>
+        <span class="badge bg-pink text-white rounded-pill px-3">{{ consultation_requests|length }} запитів</span>
+    </div>
+
+    {% if consultation_requests %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Клієнт</th>
+                        <th>Контакти</th>
+                        <th>Подія / Привід</th>
+                        <th>Побажання та деталі</th>
+                        <th>Дата</th>
+                        <th class="text-end">Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in consultation_requests %}
+                        <tr>
+                            <td class="fw-bold text-muted">{{ req.pk }}</td>
+                            <td>
+                                <strong>{{ req.client_name }}</strong>
+                            </td>
+                            <td>
+                                <div class="small"><i class="bi bi-telephone"></i> <a href="tel:{{ req.phone }}" class="text-decoration-none">{{ req.phone }}</a></div>
+                                <div class="small text-muted"><i class="bi bi-envelope"></i> <a href="mailto:{{ req.email }}" class="text-decoration-none">{{ req.email }}</a></div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary-subtle text-secondary">{{ req.occasion_description }}</span>
+                            </td>
+                            <td>
+                                <span class="small text-muted">{{ req.preferences|default:"—"|truncatewords:15 }}</span>
+                            </td>
+                            <td class="small text-muted">
+                                {{ req.created_at|date:"d.m.Y H:i" }}
+                            </td>
+                            <td class="text-end">
+                                <span class="badge {% if req.status == 'new' %}bg-primary{% elif req.status == 'in_progress' %}bg-warning text-dark{% elif req.status == 'completed' %}bg-success{% else %}bg-secondary{% endif %} rounded-pill px-3 py-2">
+                                    {{ req.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-chat-heart fs-1 opacity-50 d-block mb-2"></i>
+            <p class="mb-0">Запитів на консультацію поки немає. Коли клієнти залишають заявку на сайті, вона з'явиться тут.</p>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

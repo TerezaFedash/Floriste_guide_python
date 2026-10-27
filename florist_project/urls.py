@@ -4,13 +4,14 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    # Адміністративна панель
+
     path("admin/", admin.site.urls),
-    # Головний простір імен застосунку (В1.4)
+
     path("", include("catalog.urls", namespace="catalog")),
+    path('social-auth/', include('social_django.urls', namespace='social')),
 ]
 
-# Д5: Підключення Django Debug Toolbar у режимі налагодження
+
 if settings.DEBUG:
     import debug_toolbar
     urlpatterns = [

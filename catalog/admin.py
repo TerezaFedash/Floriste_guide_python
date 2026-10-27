@@ -1,5 +1,5 @@
 from django.contrib import admin
-from catalog.models import Category, Occasion, Flower, CareGuide, Favorite
+from catalog.models import Category, Occasion, Flower, CareGuide, Favorite, ConsultationRequest
 
 
 @admin.register(Category)
@@ -19,24 +19,9 @@ class OccasionAdmin(admin.ModelAdmin):
 
 @admin.register(Flower)
 class FlowerAdmin(admin.ModelAdmin):
-    list_display = (
-        "name",
-        "category",
-        "price",
-        "in_stock",
-        "difficulty_level",
-        "owner",
-        "created_at",
-    )
-    list_filter = (
-        "category",
-        "in_stock",
-        "difficulty_level",
-        "occasions",
-        "created_at",
-    )
+    list_display = ("name", "category", "difficulty_level", "owner", "created_at",)
+    list_filter = ("category", "difficulty_level", "occasions", "created_at",)
     search_fields = ("name", "latin_name", "description")
-    list_editable = ("price", "in_stock")
     filter_horizontal = ("occasions",)
     date_hierarchy = "created_at"
 
@@ -61,3 +46,12 @@ class FavoriteAdmin(admin.ModelAdmin):
     list_display = ("user", "flower", "created_at")
     list_filter = ("created_at",)
     search_fields = ("user__username", "flower__name")
+
+
+@admin.register(ConsultationRequest)
+class ConsultationRequestAdmin(admin.ModelAdmin):
+    list_display = ("client_name", "phone", "email", "occasion_description", "status", "created_at")
+    list_filter = ("status", "created_at")
+    search_fields = ("client_name", "phone", "email", "occasion_description", "preferences")
+    list_editable = ("status",)
+    date_hierarchy = "created_at"

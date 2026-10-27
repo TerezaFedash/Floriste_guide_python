@@ -1,28 +1,22 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from catalog.models import Flower, CareGuide, Category, Occasion
-from catalog.validators import validate_phone_ua, validate_positive_price, validate_latin_name
+from catalog.validators import validate_phone_ua, validate_latin_name
 
 
 class FlowerForm(forms.ModelForm):
-    """
-    ModelForm для створення та редагування квітки (В5.1, В5.3).
-    - fields перелічені явно (без __all__).
-    - Поле власника (owner) та дата створення виключені (присвоюються у view).
-    """
+
     class Meta:
         model = Flower
-        # В5.1: явний список полів
         fields = [
             "name",
             "latin_name",
             "category",
             "occasions",
             "description",
-            "price",
-            "in_stock",
+            "fun_fact",
             "difficulty_level",
             "image_url",
         ]
@@ -42,12 +36,11 @@ class FlowerForm(forms.ModelForm):
                 "rows": 4,
                 "placeholder": "Опишіть особливості квітки, аромат, колористику..."
             }),
-            "price": forms.NumberInput(attrs={
+            "fun_fact": forms.Textarea(attrs={
                 "class": "form-control",
-                "step": "0.50",
-                "placeholder": "0.00"
+                "rows": 2,
+                "placeholder": "Цікавий факт чи історія сорту..."
             }),
-            "in_stock": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "difficulty_level": forms.Select(attrs={"class": "form-select"}),
             "image_url": forms.URLInput(attrs={
                 "class": "form-control",
@@ -55,7 +48,7 @@ class FlowerForm(forms.ModelForm):
             }),
         }
 
-    # В5.3: метод clean_<field>() з повідомленнями про помилки українською
+
     def clean_name(self):
         name = self.cleaned_data.get("name", "").strip()
         if len(name) < 3:
@@ -65,35 +58,9 @@ class FlowerForm(forms.ModelForm):
             )
         return name
 
-    def clean_price(self):
-        price = self.cleaned_data.get("price")
-        if price is not None and price <= 0:
-            raise ValidationError(
-                "Ціна квітки повинна бути додатною та більшою за 0 грн.",
-                code="invalid_price"
-            )
-        return price
-
-    # В5.3: метод загальної валідації clean()
-    def clean(self):
-        cleaned_data = super().clean()
-        price = cleaned_data.get("price")
-        category = cleaned_data.get("category")
-
-        # Додаткова логічна валідація
-        if category and "екзотичн" in category.name.lower() and price and price < 50:
-            raise ValidationError(
-                "Для екзотичних квітів мінімальна вартість не може бути нижчою за 50 грн.",
-                code="exotic_price_too_low"
-            )
-        return cleaned_data
-
 
 class CareGuideForm(forms.ModelForm):
-    """
-    ModelForm для укладання довідника з догляду (В5.1).
-    Призначена для флористів та адміністраторів.
-    """
+
     class Meta:
         model = CareGuide
         fields = [
@@ -129,10 +96,7 @@ class CareGuideForm(forms.ModelForm):
 
 
 class FlowerFilterForm(forms.Form):
-    """
-    В5.2: forms.Form, НЕ пов'язана з моделлю.
-    Форма комплексного пошуку та фільтрації квітів у каталозі.
-    """
+
     q = forms.CharField(
         required=False,
         label="Пошуковий запит",
@@ -155,27 +119,52 @@ class FlowerFilterForm(forms.Form):
         label="Привід / Подія",
         widget=forms.Select(attrs={"class": "form-select"})
     )
-    max_price = forms.DecimalField(
+
+
+class CareGuideFilterForm(forms.Form):
+
+    q = forms.CharField(
         required=False,
-        label="Максимальна ціна (грн)",
-        min_value=0,
-        widget=forms.NumberInput(attrs={
+        label="Пошук",
+        widget=forms.TextInput(attrs={
             "class": "form-control",
-            "placeholder": "До грн"
+            "placeholder": "Назва квітки або латина..."
         })
     )
-    in_stock_only = forms.BooleanField(
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
         required=False,
-        label="Лише в наявності",
-        widget=forms.CheckboxInput(attrs={"class": "form-check-input"})
+        empty_label="— Всі категорії —",
+        label="Категорія",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+    light = forms.ChoiceField(
+        required=False,
+        label="Освітлення",
+        choices=[
+            ("", "— Будь-яке освітлення —"),
+            ("direct_sun", "Пряме сонце"),
+            ("bright_indirect", "Яскраве розсіяне"),
+            ("partial_shade", "Напівтінь"),
+            ("shade", "Тінь"),
+        ],
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+    humidity = forms.ChoiceField(
+        required=False,
+        label="Вологість",
+        choices=[
+            ("", "— Будь-яка вологість —"),
+            ("low", "Низька"),
+            ("medium", "Помірна"),
+            ("high", "Висока"),
+        ],
+        widget=forms.Select(attrs={"class": "form-select"})
     )
 
 
 class FloristConsultationForm(forms.Form):
-    """
-    В5.2: forms.Form, НЕ пов'язана з моделлю.
-    Форма запиту на консультацію або підбір авторського букета.
-    """
+
     client_name = forms.CharField(
         max_length=100,
         label="Ваше ім'я",
@@ -208,40 +197,30 @@ class FloristConsultationForm(forms.Form):
             "placeholder": "Наприклад: Річниця весілля, 5 років"
         })
     )
-    budget = forms.DecimalField(
-        min_value=100,
-        decimal_places=2,
-        label="Орієнтовний бюджет (грн)",
-        widget=forms.NumberInput(attrs={
-            "class": "form-control",
-            "placeholder": "Від 300 грн"
-        })
-    )
     preferences = forms.CharField(
         widget=forms.Textarea(attrs={
             "class": "form-control",
             "rows": 3,
             "placeholder": "Улюблені кольори, сорти, побажання щодо оформлення..."
         }),
-        label="Побажання та деталі"
+        label="Побажання та деталі",
+        required=False
     )
-
-    # В5.3: clean_<field>() валідатор
-    def clean_budget(self):
-        budget = self.cleaned_data.get("budget")
-        if budget is not None and budget < 200:
-            raise ValidationError(
-                "Мінімальний бюджет для індивідуального авторського букета становить 200 грн.",
-                code="budget_too_low"
-            )
-        return budget
 
 
 class UserRegistrationForm(UserCreationForm):
-    """
-    Форма реєстрації нового користувача (В7.1)
-    з розширеними полями та українізованим інтерфейсом.
-    """
+
+    ROLE_CHOICES = [
+        ("client", "Клієнт (перегляд каталогу, додавання в обране, замовлення консультацій)"),
+        ("florist", "Флорист (ведення довідників догляду, доступ до панелі флориста)"),
+    ]
+
+    role = forms.ChoiceField(
+        choices=ROLE_CHOICES,
+        initial="client",
+        label="Оберіть вашу роль у системі",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
     email = forms.EmailField(
         required=True,
         label="Електронна пошта",
@@ -260,9 +239,26 @@ class UserRegistrationForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ("username", "first_name", "last_name", "email")
+        fields = ("username", "first_name", "last_name", "email", "role")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.setdefault("class", "form-control")
+        if "role" in self.fields:
+            self.fields["role"].widget.attrs["class"] = "form-select"
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        role = self.cleaned_data.get("role", "client")
+        if commit:
+            self._assign_role(user, role)
+        return user
+
+    def _assign_role(self, user, role):
+        if role == "florist":
+            group, _ = Group.objects.get_or_create(name="Флористи")
+            user.groups.add(group)
+        else:
+            group, _ = Group.objects.get_or_create(name="Клієнти")
+            user.groups.add(group)

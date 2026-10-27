@@ -14,6 +14,41 @@
     </div>
 </div>
 
+<form method="get" class="mb-4">
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-body-tertiary">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold mb-1">🔍 Пошук</label>
+                {{ filter_form.q }}
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label small fw-semibold mb-1">🪴 Категорія</label>
+                {{ filter_form.category }}
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label small fw-semibold mb-1">☀️ Освітлення</label>
+                {{ filter_form.light }}
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label small fw-semibold mb-1">💧 Вологість</label>
+                {{ filter_form.humidity }}
+            </div>
+            <div class="col-12 col-md-1 d-flex gap-1">
+                <button type="submit" class="btn btn-pink w-100" title="Застосувати фільтри">
+                    <i class="bi bi-funnel-fill"></i>
+                </button>
+                <a href="{% url 'catalog:care_guide_list' %}" class="btn btn-outline-secondary" title="Скинути фільтри">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% if request.GET %}
+    <p class="text-muted small mb-3">Знайдено: <strong>{{ total_found }}</strong> результатів</p>
+{% endif %}
+
 <div class="row g-4">
     {% for guide in guides %}
         <div class="col-lg-4 col-md-6">
@@ -49,6 +84,10 @@
                             <i class="bi bi-sun text-warning me-2"></i>
                             <strong>Світло:</strong> {{ guide.get_light_requirement_display }}
                         </li>
+                        <li class="mb-2">
+                            <i class="bi bi-moisture text-info me-2"></i>
+                            <strong>Вологість:</strong> {{ guide.get_humidity_level_display }}
+                        </li>
                     </ul>
 
                     {% if guide.florist_secret %}
@@ -71,25 +110,25 @@
         </div>
     {% empty %}
         <div class="col-12 py-5 text-center text-muted">
-            <p>Довідники догляду ще не додані.</p>
+            <p>Довідники догляду не знайдені. Спробуйте змінити параметри пошуку.</p>
+            <a href="{% url 'catalog:care_guide_list' %}" class="btn btn-outline-secondary mt-2">Скинути фільтри</a>
         </div>
     {% endfor %}
 </div>
 
-<!-- Пагінація -->
 {% if is_paginated %}
     <nav class="mt-4">
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a></li>
+                <li class="page-item"><a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">Назад</a></li>
             {% endif %}
             {% for num in paginator.page_range %}
                 <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    <a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ num }}">{{ num }}</a>
                 </li>
             {% endfor %}
             {% if page_obj.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед</a></li>
+                <li class="page-item"><a class="page-link" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">Вперед</a></li>
             {% endif %}
         </ul>
     </nav>

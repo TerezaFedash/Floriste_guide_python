@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Category',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('category_id', models.AutoField(primary_key=True, serialize=False, db_column='category_id')),
                 ('name', models.CharField(max_length=100, unique=True, verbose_name='Назва категорії')),
                 ('slug', models.SlugField(max_length=100, unique=True, verbose_name='URL-ідентифікатор (slug)')),
                 ('description', models.TextField(blank=True, verbose_name='Опис категорії')),
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Occasion',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('occasion_id', models.AutoField(primary_key=True, serialize=False, db_column='occasion_id')),
                 ('name', models.CharField(max_length=100, unique=True, verbose_name='Назва приводу')),
                 ('slug', models.SlugField(max_length=100, unique=True, verbose_name='URL-ідентифікатор (slug)')),
                 ('description', models.TextField(blank=True, verbose_name='Опис рекомендацій для події')),
@@ -49,14 +49,13 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Flower',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('flower_id', models.AutoField(primary_key=True, serialize=False, db_column='flower_id')),
                 ('name', models.CharField(max_length=150, verbose_name='Назва квітки')),
                 ('latin_name', models.CharField(blank=True, max_length=150, validators=[catalog.validators.validate_latin_name], verbose_name='Ботанічна (латинська) назва')),
                 ('description', models.TextField(verbose_name='Опис, символізм та флористичне значення')),
-                ('price', models.DecimalField(decimal_places=2, max_digits=8, validators=[catalog.validators.validate_positive_price], verbose_name='Орієнтовна ціна (грн/шт)')),
-                ('in_stock', models.BooleanField(default=True, verbose_name='Є в наявності в майстерні')),
+                ('fun_fact', models.TextField(blank=True, verbose_name='Цікавий факт / коротка історія')),
                 ('difficulty_level', models.CharField(choices=[('easy', 'Невибаглива (легко)'), ('medium', 'Середня складність'), ('hard', 'Вимоглива до умов')], default='easy', max_length=20, verbose_name='Складність догляду')),
-                ('image_url', models.URLField(default='https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80', max_length=500, verbose_name='URL фотографії')),
+                ('image_url', models.URLField(blank=True, default='https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80', max_length=2000, verbose_name='URL фотографії')),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Дата додавання')),
                 ('category', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='flowers', to='catalog.category', verbose_name='Категорія')),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='flowers', to=settings.AUTH_USER_MODEL, verbose_name='Автор запису')),
@@ -72,11 +71,13 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CareGuide',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('careguide_id', models.AutoField(primary_key=True, serialize=False, db_column='careguide_id')),
                 ('watering_frequency_days', models.PositiveIntegerField(default=2, verbose_name='Частота заміни води / поливу (днів)')),
                 ('temperature_range', models.CharField(default='18-22°C', max_length=50, verbose_name='Оптимальний температурний режим')),
                 ('light_requirement', models.CharField(choices=[('direct_sun', 'Пряме сонячне світло'), ('bright_indirect', 'Яскраве розсіяне світло'), ('partial_shade', 'Напівтінь'), ('shade', 'Тінь')], default='bright_indirect', max_length=30, verbose_name='Вимоги до освітлення')),
                 ('humidity_level', models.CharField(choices=[('low', 'Низька (до 40%)'), ('medium', 'Помірна (40-60%)'), ('high', 'Висока (понад 60%)')], default='medium', max_length=20, verbose_name='Рівень вологості')),
+                ('soil_type', models.CharField(blank=True, max_length=200, verbose_name='Рекомендований тип ґрунту (для горщикових рослин)')),
+                ('fun_fact', models.TextField(blank=True, verbose_name='Цікавий факт про рослину')),
                 ('stem_cutting_tips', models.TextField(verbose_name='Правила підрізання стебел і підготовки води')),
                 ('florist_secret', models.TextField(blank=True, verbose_name='Професійний секрет флориста для стійкості')),
                 ('updated_at', models.DateField(auto_now=True, verbose_name='Дата оновлення довідника')),
@@ -92,7 +93,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Favorite',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('favorite_id', models.AutoField(primary_key=True, serialize=False, db_column='favorite_id')),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Час збереження')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='favorites', to=settings.AUTH_USER_MODEL, verbose_name='Користувач')),
                 ('flower', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='favorited_by', to='catalog.flower', verbose_name='Квітка')),
@@ -102,6 +103,24 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Обрані квіти',
                 'ordering': ['-created_at'],
                 'constraints': [models.UniqueConstraint(fields=('user', 'flower'), name='unique_user_flower_favorite')],
+            },
+        ),
+        migrations.CreateModel(
+            name='ConsultationRequest',
+            fields=[
+                ('consultation_id', models.AutoField(primary_key=True, serialize=False, db_column='consultation_id')),
+                ('client_name', models.CharField(max_length=100, verbose_name="Ім'я клієнта")),
+                ('phone', models.CharField(max_length=20, verbose_name='Номер телефону')),
+                ('email', models.EmailField(max_length=254, verbose_name="Email для зв'язку")),
+                ('occasion_description', models.CharField(max_length=200, verbose_name='До якої події')),
+                ('preferences', models.TextField(blank=True, verbose_name='Побажання та деталі')),
+                ('status', models.CharField(choices=[('new', 'Новий запит'), ('in_progress', 'В обробці'), ('completed', 'Завершено'), ('cancelled', 'Скасовано')], default='new', max_length=20, verbose_name='Статус запиту')),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Дата та час запиту')),
+            ],
+            options={
+                'verbose_name': 'Запит на консультацію',
+                'verbose_name_plural': 'Запити на консультації',
+                'ordering': ['-created_at'],
             },
         ),
     ]

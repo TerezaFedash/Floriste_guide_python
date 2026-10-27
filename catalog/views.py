@@ -14,46 +14,31 @@ from django.db.models import Q, Avg, Count, Min, Max
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 
-from catalog.models import Category, Occasion, Flower, CareGuide, Favorite
+from catalog.models import Category, Occasion, Flower, CareGuide, Favorite, ConsultationRequest
 from catalog.forms import (
     FlowerForm,
     CareGuideForm,
     FlowerFilterForm,
+    CareGuideFilterForm,
     FloristConsultationForm,
     UserRegistrationForm,
 )
 
 
-# ==============================================================================
-# 1. FUNCTION-BASED VIEWS (В6.2, Д4)
-# ==============================================================================
-
 def home_view(request):
-    """
-    В6.2 (FBV): Головна сторінка довідника флориста.
-    Д4: Розрахунок зведеної аналітики та агрегованих показників за допомогою
-    aggregate() та annotate().
-    Д5: Оптимізація запитів за допомогою select_related.
-    """
-    # Агрегація загальної статистики каталогу (Д4)
+    
     stats = Flower.objects.aggregate(
-        total_flowers=Count("id"),
-        avg_price=Avg("price"),
-        min_price=Min("price"),
-        max_price=Max("price"),
+        total_flowers=Count("pk"),
     )
 
-    # Анотація: кількість квітів у кожній категорії (Д4)
     categories_with_counts = Category.objects.annotate(
         flower_count=Count("flowers")
     ).filter(flower_count__gt=0)
-
-    # Добірка рекомендованих свіжих квітів (Д5: без N+1)
-    featured_flowers = Flower.objects.filter(in_stock=True).select_related(
+  
+    featured_flowers = Flower.objects.select_related(
         "category", "owner"
     ).prefetch_related("occasions")[:4]
 
-    # Список приводів для швидкого підбору
     occasions = Occasion.objects.all()[:6]
 
     context = {
@@ -66,21 +51,29 @@ def home_view(request):
 
 
 def consultation_view(request):
-    """
-    В5.2, В6.2 (FBV): Форма замовлення консультації флориста.
-    Використовує forms.Form, не прив'язану до моделі.
-    Реалізує шаблон Post/Redirect/Get (PRG) (В5.4).
-    """
+   
     if request.method == "POST":
         form = FloristConsultationForm(request.POST)
         if form.is_valid():
             client_name = form.cleaned_data["client_name"]
+            phone = form.cleaned_data["phone"]
+            email = form.cleaned_data["email"]
             occasion = form.cleaned_data["occasion_description"]
-            # У навчальному проєкті запит успішно обробляється та відправляється флористу
+            preferences = form.cleaned_data.get("preferences", "")
+
+           
+            ConsultationRequest.objects.create(
+                client_name=client_name,
+                phone=phone,
+                email=email,
+                occasion_description=occasion,
+                preferences=preferences,
+            )
+
             messages.success(
                 request,
-                f"Дякуємо, {client_name}! Ваш запит на підбір букета до події «{occasion}» "
-                f"успішно надіслано черговому флористу. Ми зв'яжемося з Вами найближчим часом!"
+                f"Дякуємо, {client_name}! Ваш запит на підбір квітів до події «{occasion}» "
+                f"успішно збережено в системі та передано флористу. Ми зв'яжемося з Вами найближчим часом!"
             )
             return redirect("catalog:consultation")
     else:
@@ -92,10 +85,7 @@ def consultation_view(request):
 @login_required
 @require_POST
 def toggle_favorite_view(request, pk):
-    """
-    В6.2, В5.4 (FBV): Додавання / вилучення квітки з обраного.
-    Зміна даних виключно через POST з PRG.
-    """
+   
     flower = get_object_or_404(Flower, pk=pk)
     fav_obj = Favorite.objects.filter(user=request.user, flower=flower).first()
 
@@ -106,44 +96,33 @@ def toggle_favorite_view(request, pk):
         Favorite.objects.create(user=request.user, flower=flower)
         messages.success(request, f"Квітку «{flower.name}» успішно додано до обраного! 🌸")
 
-    # Повернення на сторінку, звідки надійшов запит, або до списку
+   
     next_url = request.POST.get("next")
     if next_url and next_url.startswith("/"):
         return redirect(next_url)
     return redirect("catalog:flower_detail", pk=flower.pk)
 
 
-# ==============================================================================
-# 2. CRUD GENERIC VIEWS ДЛЯ ОСНОВНОЇ СУТНОСТІ FLOWER (В6.1, В6.3, В6.4)
-# ==============================================================================
 
 class FlowerListView(ListView):
-    """
-    В6.1 (ListView): Каталог квітів.
-    В6.3: Пагінація списку (paginate_by = 6).
-    В6.4: Перевизначення get_queryset() та get_context_data().
-    Д4: Пошук та фільтрація через Q-об'єкти.
-    Д5: Оптимізація select_related та prefetch_related без N+1 запитів.
-    """
+
     model = Flower
     template_name = "catalog/flower_list.html"
     context_object_name = "flowers"
     paginate_by = 6
 
     def get_queryset(self):
-        # Д5: Усунення проблеми N+1 запитів
+        
         qs = Flower.objects.select_related("category", "owner").prefetch_related("occasions")
 
-        # Читання фільтрів з GET-параметрів
+        
         self.filter_form = FlowerFilterForm(self.request.GET)
         if self.filter_form.is_valid():
             q = self.filter_form.cleaned_data.get("q")
             category = self.filter_form.cleaned_data.get("category")
             occasion = self.filter_form.cleaned_data.get("occasion")
-            max_price = self.filter_form.cleaned_data.get("max_price")
-            in_stock_only = self.filter_form.cleaned_data.get("in_stock_only")
 
-            # Д4: Пошук за допомогою Q-об'єктів (В8.1 - безпечна параметризація)
+            
             if q:
                 qs = qs.filter(
                     Q(name__icontains=q)
@@ -154,15 +133,11 @@ class FlowerListView(ListView):
                 qs = qs.filter(category=category)
             if occasion:
                 qs = qs.filter(occasions=occasion)
-            if max_price is not None:
-                qs = qs.filter(price__lte=max_price)
-            if in_stock_only:
-                qs = qs.filter(in_stock=True)
 
         return qs.distinct()
 
     def get_context_data(self, **kwargs):
-        # В6.4: Перевизначення get_context_data()
+        
         context = super().get_context_data(**kwargs)
         context["filter_form"] = self.filter_form
         context["total_found"] = self.get_queryset().count()
@@ -170,11 +145,7 @@ class FlowerListView(ListView):
 
 
 class FlowerDetailView(DetailView):
-    """
-    В6.1 (DetailView): Детальна сторінка квітки.
-    В6.5: Маршрут із конвертером <int:pk>.
-    Д5: Оптимізація доступу до зв'язаного довідника догляду (care_guide).
-    """
+    
     model = Flower
     template_name = "catalog/flower_detail.html"
     context_object_name = "flower"
@@ -192,7 +163,7 @@ class FlowerDetailView(DetailView):
             user.is_authenticated
             and Favorite.objects.filter(user=user, flower=flower).exists()
         )
-        # Схожі квіти з тієї ж категорії
+        
         context["related_flowers"] = Flower.objects.filter(
             category=flower.category
         ).exclude(pk=flower.pk)[:3]
@@ -200,11 +171,6 @@ class FlowerDetailView(DetailView):
 
 
 class FlowerCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
-    """
-    В6.1 (CreateView): Створення нової квітки.
-    Доступ дозволено виключно адміністратору системи (is_superuser).
-    В7.2: Власник запису присвоюється у form_valid(), а не вибирається у формі.
-    """
     model = Flower
     form_class = FlowerForm
     template_name = "catalog/flower_form.html"
@@ -222,18 +188,14 @@ class FlowerCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         )
         return redirect("catalog:flower_list")
 
-    def form_valid(self, form):
-        # В7.2: Присвоєння автора на рівні сервера
+    def form_valid(self, form):   
         form.instance.owner = self.request.user
         messages.success(self.request, f"Квітку «{form.instance.name}» успішно додано до каталогу адміністратором!")
         return super().form_valid(form)
 
 
 class OwnerOrStaffRequiredMixin(UserPassesTestMixin):
-    """
-    В7.3, В7.5: Заборона редагування та видалення чужих записів.
-    Перевірка прав доступу на сервері: редагувати запис може лише його автор або персонал (staff/флорист).
-    """
+   
     def test_func(self):
         obj = self.get_object()
         user = self.request.user
@@ -247,10 +209,7 @@ class OwnerOrStaffRequiredMixin(UserPassesTestMixin):
 
 
 class FlowerUpdateView(LoginRequiredMixin, OwnerOrStaffRequiredMixin, UpdateView):
-    """
-    В6.1 (UpdateView): Редагування існуючої квітки.
-    В7.3: Тільки автор запису або привілейована роль флориста.
-    """
+   
     model = Flower
     form_class = FlowerForm
     template_name = "catalog/flower_form.html"
@@ -261,10 +220,7 @@ class FlowerUpdateView(LoginRequiredMixin, OwnerOrStaffRequiredMixin, UpdateView
 
 
 class FlowerDeleteView(LoginRequiredMixin, OwnerOrStaffRequiredMixin, DeleteView):
-    """
-    В6.1 (DeleteView): Видалення квітки з підтвердженням.
-    В5.4: Видалення через POST з PRG.
-    """
+    
     model = Flower
     template_name = "catalog/flower_confirm_delete.html"
     success_url = reverse_lazy("catalog:flower_list")
@@ -276,27 +232,54 @@ class FlowerDeleteView(LoginRequiredMixin, OwnerOrStaffRequiredMixin, DeleteView
         return response
 
 
-# ==============================================================================
-# 3. GENERIC VIEWS ДЛЯ ІНШИХ МОДЕЛЕЙ (В6.1)
-# ==============================================================================
+
 
 class CareGuideListView(ListView):
-    """
-    В6.1 (ListView для другої моделі): Каталог довідників з догляду.
-    """
+
     model = CareGuide
     template_name = "catalog/careguide_list.html"
     context_object_name = "guides"
     paginate_by = 6
 
     def get_queryset(self):
-        return CareGuide.objects.select_related("flower", "expert").order_by("flower__name")
+        qs = CareGuide.objects.select_related(
+            "flower", "flower__category", "expert"
+        ).order_by("flower__name")
+
+        self.filter_form = CareGuideFilterForm(self.request.GET)
+        if self.filter_form.is_valid():
+            q = self.filter_form.cleaned_data.get("q")
+            category = self.filter_form.cleaned_data.get("category")
+            light = self.filter_form.cleaned_data.get("light")
+            humidity = self.filter_form.cleaned_data.get("humidity")
+
+            if q:
+                qs = qs.filter(
+                    Q(flower__name__icontains=q)
+                    | Q(flower__latin_name__icontains=q)
+                )
+            if category:
+                qs = qs.filter(flower__category=category)
+            if light:
+                qs = qs.filter(light_requirement=light)
+            if humidity:
+                qs = qs.filter(humidity_level=humidity)
+        else:
+            self.filter_form = CareGuideFilterForm()
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if not hasattr(self, "filter_form"):
+            self.filter_form = CareGuideFilterForm()
+        context["filter_form"] = self.filter_form
+        context["total_found"] = self.get_queryset().count()
+        return context
 
 
 class CareGuideDetailView(DetailView):
-    """
-    В6.1 (DetailView для другої моделі): Детальні інструкції з догляду.
-    """
+   
     model = CareGuide
     template_name = "catalog/careguide_detail.html"
     context_object_name = "guide"
@@ -306,10 +289,7 @@ class CareGuideDetailView(DetailView):
 
 
 class CareGuideCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
-    """
-    В7.4, В7.5: Привілейована дія — створення довідника догляду.
-    Дозволено лише користувачам із правом 'can_manage_care_guide' або персоналу.
-    """
+   
     model = CareGuide
     form_class = CareGuideForm
     template_name = "catalog/careguide_form.html"
@@ -335,9 +315,7 @@ class CareGuideCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVie
 
 
 class OccasionListView(ListView):
-    """
-    В6.1: Список приводів для підбору букетів.
-    """
+    
     model = Occasion
     template_name = "catalog/occasion_list.html"
     context_object_name = "occasions"
@@ -347,9 +325,7 @@ class OccasionListView(ListView):
 
 
 class OccasionDetailView(DetailView):
-    """
-    В6.1, В6.5 (slug): Сторінка підбору квітів до конкретного приводу.
-    """
+    
     model = Occasion
     template_name = "catalog/occasion_detail.html"
     context_object_name = "occasion"
@@ -358,16 +334,12 @@ class OccasionDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["flowers"] = self.object.flowers.filter(
-            in_stock=True
-        ).select_related("category", "owner")
+        context["flowers"] = self.object.flowers.select_related("category", "owner")
         return context
 
 
 class CategoryDetailView(DetailView):
-    """
-    Сторінка перегляду квітів у вибраній категорії.
-    """
+   
     model = Category
     template_name = "catalog/category_detail.html"
     context_object_name = "category"
@@ -381,9 +353,7 @@ class CategoryDetailView(DetailView):
 
 
 class FavoritesListView(LoginRequiredMixin, ListView):
-    """
-    Перегляд списку збережених квітів користувача.
-    """
+    
     model = Favorite
     template_name = "catalog/favorites_list.html"
     context_object_name = "favorites"
@@ -395,14 +365,10 @@ class FavoritesListView(LoginRequiredMixin, ListView):
         ).select_related("flower__category", "flower__owner")
 
 
-# ==============================================================================
-# 4. АВТЕНТИФІКАЦІЯ ТА РОЛІ (В7.1, В7.4)
-# ==============================================================================
+
 
 def register_view(request):
-    """
-    В7.1: Реєстрація нового користувача (UserCreationForm).
-    """
+
     if request.user.is_authenticated:
         return redirect("catalog:flower_list")
 
@@ -422,9 +388,7 @@ def register_view(request):
 
 
 class CustomLoginView(LoginView):
-    """
-    В7.1: Вхід у систему з повідомленням.
-    """
+   
     template_name = "catalog/auth/login.html"
 
     def form_valid(self, form):
@@ -433,11 +397,7 @@ class CustomLoginView(LoginView):
 
 
 class FloristDashboardView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-    """
-    В7.4, В7.5: Спеціальний закритий кабінет флориста (привілейована роль).
-    Доступ дозволено лише персоналу або учасникам групи 'Флористи'.
-    Серверна перевірка доступу через test_func.
-    """
+    
     model = Flower
     template_name = "catalog/florist_dashboard.html"
     context_object_name = "flowers"
@@ -454,10 +414,10 @@ class FloristDashboardView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["out_of_stock_count"] = Flower.objects.filter(in_stock=False).count()
         context["care_guides_count"] = CareGuide.objects.count()
+        context["consultation_requests"] = ConsultationRequest.objects.all()[:10]
+        context["new_consultations_count"] = ConsultationRequest.objects.filter(status="new").count()
         context["category_analytics"] = Category.objects.annotate(
-            count=Count("flowers"),
-            avg_price=Avg("flowers__price")
+            count=Count("flowers")
         )
         return context

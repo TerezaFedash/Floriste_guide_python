@@ -1,4 +1,3 @@
-// Перемикач світлої / темної теми з рожевою естетикою (Д7)
 document.addEventListener("DOMContentLoaded", function () {
     const themeToggleBtn = document.getElementById("themeToggleBtn");
     const themeIcon = document.getElementById("themeIcon");
@@ -35,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Початкова ініціалізація
+
     const currentTheme = getCookie("florist_theme") || localStorage.getItem("florist_theme") || htmlElement.getAttribute("data-bs-theme") || "light";
     applyTheme(currentTheme);
 

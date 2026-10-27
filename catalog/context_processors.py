@@ -2,9 +2,7 @@ from catalog.models import Category
 
 
 def florist_global_context(request):
-    """
-    Глобальний контекстний процесор для меню категорій та поточної теми.
-    """
+
     theme = getattr(request, "theme", "light")
     try:
         nav_categories = Category.objects.all()[:8]

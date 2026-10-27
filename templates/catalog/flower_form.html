@@ -7,7 +7,7 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
-        <!-- Навігація назад -->
+
         <a href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'catalog:flower_list' %}{% endif %}" class="btn btn-sm btn-outline-secondary mb-3 rounded-pill">
             <i class="bi bi-arrow-left"></i> Повернутися назад
         </a>
@@ -23,7 +23,7 @@
                 </p>
             </div>
 
-            <!-- Форма зі зміною даних через POST та CSRF-токеном (В5.4) -->
+
             <form method="post" novalidate>
                 {% csrf_token %}
 
@@ -36,7 +36,7 @@
                 {% endif %}
 
                 <div class="row g-3">
-                    <!-- Назва квітки -->
+
                     <div class="col-md-7">
                         <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">
                             {{ form.name.label }} <span class="text-danger">*</span>
@@ -47,7 +47,7 @@
                         {% endif %}
                     </div>
 
-                    <!-- Латинська назва -->
+
                     <div class="col-md-5">
                         <label for="{{ form.latin_name.id_for_label }}" class="form-label fw-semibold">
                             {{ form.latin_name.label }}
@@ -58,7 +58,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Категорія -->
                     <div class="col-md-6">
                         <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold">
                             {{ form.category.label }} <span class="text-danger">*</span>
@@ -69,7 +68,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Складність догляду -->
                     <div class="col-md-6">
                         <label for="{{ form.difficulty_level.id_for_label }}" class="form-label fw-semibold">
                             {{ form.difficulty_level.label }}
@@ -80,31 +78,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Ціна -->
-                    <div class="col-md-6">
-                        <label for="{{ form.price.id_for_label }}" class="form-label fw-semibold">
-                            {{ form.price.label }} <span class="text-danger">*</span>
-                        </label>
-                        <div class="input-group">
-                            {{ form.price }}
-                            <span class="input-group-text">грн/шт</span>
-                        </div>
-                        {% if form.price.errors %}
-                            <div class="text-danger small mt-1">{{ form.price.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Наявність на складі -->
-                    <div class="col-md-6 d-flex align-items-center">
-                        <div class="form-check mt-3">
-                            {{ form.in_stock }}
-                            <label class="form-check-label fw-semibold" for="{{ form.in_stock.id_for_label }}">
-                                {{ form.in_stock.label }}
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- URL зображення -->
                     <div class="col-12">
                         <label for="{{ form.image_url.id_for_label }}" class="form-label fw-semibold">
                             {{ form.image_url.label }}
@@ -116,7 +89,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Події та приводи (ManyToManyField) -->
                     <div class="col-12">
                         <label class="form-label fw-semibold">{{ form.occasions.label }}</label>
                         <div class="p-3 rounded-3 bg-body-tertiary border">
@@ -135,7 +107,6 @@
                         </div>
                     </div>
 
-                    <!-- Опис -->
                     <div class="col-12">
                         <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">
                             {{ form.description.label }} <span class="text-danger">*</span>
@@ -143,6 +114,16 @@
                         {{ form.description }}
                         {% if form.description.errors %}
                             <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="{{ form.fun_fact.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.fun_fact.label }}
+                        </label>
+                        {{ form.fun_fact }}
+                        {% if form.fun_fact.errors %}
+                            <div class="text-danger small mt-1">{{ form.fun_fact.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
